@@ -9,3 +9,4 @@ tiktoken
 sentence-transformers
 psycopg[binary]
 pgvector
+openai
