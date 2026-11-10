@@ -19,6 +19,22 @@ services:
     volumes:
       - redisdata:/data
 
+  redpanda:
+    image: redpandadata/redpanda:latest
+    container_name: finsight-redpanda
+    command:
+      - redpanda
+      - start
+      - --mode=dev-container
+      - --smp=1
+      - --kafka-addr=internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr=internal://redpanda:9092,external://localhost:19092
+    ports:
+      - "19092:19092"
+    volumes:
+      - redpandadata:/var/lib/redpanda/data
+
 volumes:
   pgdata:
   redisdata:
+  redpandadata:
