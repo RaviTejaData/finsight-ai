@@ -7,3 +7,5 @@ beautifulsoup4
 lxml
 tiktoken
 sentence-transformers
+psycopg[binary]
+pgvector
