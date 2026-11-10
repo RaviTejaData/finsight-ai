@@ -5,6 +5,7 @@ import time
 import requests
 from confluent_kafka import Consumer
 from dotenv import load_dotenv
+from app.processing.store import store_filing
 
 load_dotenv()
 HEADERS = {"User-Agent": os.getenv("SEC_USER_AGENT")}
@@ -30,23 +31,29 @@ def primary_doc_url(cik, accession):
     return None
 
 
+def download(filing, accession, path):
+    doc_url = primary_doc_url(filing["cik"], accession)
+    if not doc_url:
+        return False
+    html = requests.get(doc_url, headers=HEADERS, timeout=60).text
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(html)
+    time.sleep(0.2)
+    return True
+
+
 def process(filing):
     m = ACC_RE.search(filing["link"])
     if not m or filing["cik"] == "unknown":
         return
     accession = m.group(1)
     path = f"{RAW_DIR}/{accession}.htm"
-    if os.path.exists(path):
-        return
-    doc_url = primary_doc_url(filing["cik"], accession)
-    if not doc_url:
+    if not os.path.exists(path) and not download(filing, accession, path):
         print("Not found yet:", accession)
         return
-    html = requests.get(doc_url, headers=HEADERS, timeout=60).text
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(html)
-    print("Saved", filing["title"], "->", path)
-    time.sleep(0.2)
+    t = time.time()
+    n = store_filing(path)
+    print(f"Indexed {n:>4} chunks in {time.time() - t:5.1f}s | {filing['title'][:60]}")
 
 
 if __name__ == "__main__":
