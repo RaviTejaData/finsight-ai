@@ -46,7 +46,7 @@ def split_sections(text):
     sections = {}
     for i, (start, name) in enumerate(positions):
         end = positions[i + 1][0] if i + 1 < len(positions) else len(text)
-        if name in KEEP:
+        if name in KEEP and end - start > 500:
             sections[name] = re.sub(r"\s+", " ", text[start:end]).strip()
     return sections
 
